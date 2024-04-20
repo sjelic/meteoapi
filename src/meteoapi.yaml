@@ -1,0 +1,276 @@
+openapi: 3.0.0
+info:
+  title: MeteoAPI
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+paths:
+  /measurements:
+    get:
+      description: List svih merenja na datoj lokaciji
+      operationId: api.getMeasurements
+      parameters:
+        - in: query
+          name: location
+          description: Naziv mesta/grada za kojeg želimo preuzmemo merenja.
+          schema:
+            type: string
+            example: Belgrade
+          required: true
+      responses:
+        '200':
+          description: Lista svih merenja na datoj lokaciji
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  $ref: "#/components/schemas/Measurement"
+    post:
+      operationId: api.createMeasurement
+      description: Kreiranje merenja u datom vremenu, na datoj lokaciji, za datu meteorološku promenljivu
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat:
+                  description: Geografska širina
+                  type: number
+                  example: 44.78656800
+                long:
+                  description: Geografska dužina
+                  type: number
+                  example: 20.44892160
+                time:
+                  description: Vreme merenja
+                  type: string
+                  format: date-time
+                  example: 2024-03-28T09:15:28Z
+                variable:
+                  description: Naziv meteorološke promenljive
+                  type: string
+                  example: temperatura
+                value:
+                  description: Vrednost meteorološke promenljive
+                  type: number
+                  format: float
+                  example: 21.56
+              required:
+                - lat
+                - long
+                - time
+                - variable
+              example:
+                    lat: 44.78656800
+                    long: 20.44892160
+                    time: 2024-03-28T09:15:28Z
+                    variable: temperatura
+                    value: 21.56
+      responses:
+        '201':
+          description: Uspešno je kreirano merenje
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Measurement"
+  /measurements/{id}:
+    get:
+      description: Vraća listu koja sadrži jedno merenje sa datim `id`-om
+      operationId: api.getMeasurementById
+      parameters:
+        - in: path
+          name: id
+          description: Identifikator merenja (interni podatak)
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: Uspešno vraćeno merenje
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Measurement"
+    patch:
+      description: Ažurira merenje sa datim `id`-om
+      operationId: api.updateMeasurementById
+      parameters:
+        - in: path
+          name: id
+          description: Identifikator merenja (interni podatak)
+          schema:
+            type: integer
+            example: 1
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat:
+                  description: Geografska širina
+                  type: number
+                  example: 44.78656800
+                long:
+                  description: Geografska dužina
+                  type: number
+                  example: 20.44892160
+                time:
+                  description: Vreme merenja
+                  type: string
+                  format: date-time
+                  example: 2024-03-28T09:15:28Z
+                variable:
+                  description: Naziv meteorološke promenljive
+                  type: string
+                  example: temperatura
+                value:
+                  description: Vrednost meteorološke promenljive
+                  type: number
+                  format: float
+                  example: 20.01
+      responses:
+        '200':
+          description: Merenje je uspešno ažurirano.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Measurement"
+    delete:
+      description: Briše merenje čiji je identifikator `id`
+      operationId: api.removeMeasurementById
+      parameters:
+        - in: path
+          name: id
+          description: Identifikator merenja (interni podatak)
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: Nema sadržaja
+
+components:
+  schemas:
+    Measurement:
+      type: object
+      x-tablename: measurement
+      properties:
+        id:
+          description: Identifikacioni broj (interni ključ)
+          type: integer
+          x-primary-key: true
+          x-autoincrement: true
+          example: 1
+        lat:
+          description: Geografska širina
+          type: number
+          example: 44.78656800
+        long:
+          description: Geografska dužina
+          type: number
+          example: 20.44892160
+        time:
+          description: Vreme merenja
+          type: string
+          format: date-time
+          example: 2024-03-28T09:15:28Z
+        variable:
+          description: Naziv meteorološke promenljive
+          type: string
+          example: temperatura
+        value:
+          description: Vrednost meteorološke promenljive
+          type: number
+          format: float
+          example: 21.56
+      example:
+        - id: 1
+          lat: 44.78656800
+          long: 20.44892160
+          time: 2024-03-28T09:15:28Z
+          variable: temperatura
+          value: 21.56
+      required:
+        - lat
+        - long
+        - time
+        - variable
+    Location:
+      type: object
+      x-tablename: location
+      properties:
+        id:
+          description: Identifikacioni broj (interni ključ)
+          type: integer
+          x-primary-key: true
+          x-autoincrement: true
+          example: 1
+        name:
+          description: Naziv lokacije
+          type: string
+          example: Beograd
+        country:
+          description: Država lokacije
+          type: string
+          example: Serbia
+      required:
+        - id
+        - name
+        - country
+    Variable:
+      type: object
+      description: Meteorološka promenljiva
+      x-tablename: variable
+      properties:
+        id:
+          description: Identifikacioni broj (interni ključ)
+          type: integer
+          x-primary-key: true
+          x-autoincrement: true
+        name:
+          description: Naziv meteorološke varijable
+          type: string
+          enum:
+          - Temperature
+          - Precipitation
+          - Humidity
+    Source:
+      type: object
+      description: Naziv izvora
+      x-tablename: source
+      properties:
+        id:
+          description: Identifikacioni broj (kluč)
+          type: integer
+          x-primary-key: true
+          x-autoincrement: true
+        code:
+          description: Kod (skraćeni naziv)
+          type: string
+        name:
+          description: Naziv izvora
+          type: string
+      required:
+        - id
+        - code
+        - name
+      example:
+        - id: 1
+          code: RHMZ
+          name: Republički hidro-meteorološki zavod
+  securitySchemes:
+    UserToken:
+      type: apiKey
+      in: header
+      name: Authorization
+
